@@ -33,36 +33,6 @@ echo "";
 fi
 }
 
-function Check()
-{
-echo 'Preparatory work...'
-apt-get >/dev/null 2>&1
-[ $? -le '1' ] && apt-get -y -qq install curl grep unzip ethtool >/dev/null 2>&1
-yum >/dev/null 2>&1
-[ $? -le '1' ] && yum -y -q install which sed curl grep awk unzip ethtool >/dev/null 2>&1
-[ -f /etc/redhat-release ] && KNA=$(awk '{print $1}' /etc/redhat-release)
-[ -f /etc/os-release ] && KNA=$(awk -F'[= "]' '/PRETTY_NAME/{print $3}' /etc/os-release)
-[ -f /etc/lsb-release ] && KNA=$(awk -F'[="]+' '/DISTRIB_ID/{print $2}' /etc/lsb-release)
-KNB=$(getconf LONG_BIT)
-ifconfig >/dev/null 2>&1
-[ $? -gt '1' ] && echo -ne "I can not run 'ifconfig' successfully! \nPlease check your system, and try again! \n\n" && exit 1;
-[ ! -f /proc/net/dev ] && echo -ne "I can not find network device! \n\n" && exit 1;
-[ -n "$(grep 'eth0:' /proc/net/dev)" ] && Eth=eth0 || Eth=`cat /proc/net/dev |awk -F: 'function trim(str){sub(/^[ \t]*/,"",str); sub(/[ \t]*$/,"",str); return str } NR>2 {print trim($1)}'  |grep -Ev '^lo|^sit|^stf|^gif|^dummy|^vmnet|^vir|^gre|^ipip|^ppp|^bond|^tun|^tap|^ip6gre|^ip6tnl|^teql|^venet' |awk 'NR==1 {print $0}'`
-[ -z "$Eth" ] && echo "I can not find the server pubilc Ethernet! " && exit 1
-URLKernel='https://raw.githubusercontent.com/llccong/serverSpeeder_kernel/master/serverSpeeder.txt'
-MyKernel=$(curl -q -k -s "$URLKernel" |grep "$KNA/" |grep "/x$KNB/" |grep "/$KNK/" |sort -n -k 2 -t '_' |tail -n 1)
-[ -z "$MyKernel" ] && echo -ne "Kernel not be matched! \nYou should change kernel manually, and try again! \n\nView the link to get detaits: \n"$URLKernel" \n\n\n" && exit 1
-pause;
-}
-
-function SelectKernel()
-{
-KNN=$(echo $MyKernel |awk -F '/' '{ print $2 }') && [ -z "$KNN" ] && Uninstall && echo "Error,Not Matched! " && exit 1
-KNV=$(echo $MyKernel |awk -F '/' '{ print $5 }') && [ -z "$KNV" ] && Uninstall && echo "Error,Not Matched! " && exit 1
-wget --no-check-certificate -q -O "/tmp/appex/apxfiles/bin/acce-"$KNV"-["$KNA"_"$KNN"_"$KNK"]" "https://raw.githubusercontent.com/llccong/serverSpeeder_kernel/master/$MyKernel"
-[ ! -f "/tmp/appex/apxfiles/bin/acce-"$KNV"-["$KNA"_"$KNN"_"$KNK"]" ] && Uninstall && echo "Download Error,Not Found acce-$KNV-[$KNA_$KNN_$KNK]! " && exit 1
-}
-
 function Install()
 {
 Welcome;
